@@ -1,26 +1,27 @@
 package com.p8labs.security.member.domain;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedBy;
 import org.springframework.data.annotation.LastModifiedDate;
 
 import java.time.Instant;
 
+@NoArgsConstructor
 @Getter
-@Setter
 @Entity
 @Table(name = "member_profile")
-public class MemberProfile {
+public class MemberProfileEntity {
     @Id
-    @Column(name = "member_id", nullable = false)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id")
     private Long id;
+
+    @JoinColumn(name = "member_id",  nullable = false)
+    @OneToOne(fetch = FetchType.LAZY)
+    private MemberEntity member;
 
     @Column(name = "email", nullable = false)
     private String email;
@@ -36,4 +37,12 @@ public class MemberProfile {
     @Column(name = "reg_dttm", nullable = false)
     private Instant regDttm;
 
+    public MemberProfileEntity(String nickname, String email) {
+        this.nickname = nickname;
+        this.email = email;
+    }
+
+    public void updateMember(MemberEntity member) {
+        this.member = member;
+    }
 }

@@ -11,10 +11,13 @@ import com.p8labs.security.member.domain.MemberProfileEntity;
 import com.p8labs.security.member.dto.MemberRegisterDto;
 import com.p8labs.security.member.enums.AuthorityType;
 import com.p8labs.security.member.repository.MemberRepository;
+import com.p8labs.security.member.utils.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 @Service
@@ -35,8 +38,11 @@ public class MemberService {
             throw new GlobalBusinessException(CommonException.Member.NOT_EQUAL_PASSWORD_EXCEPTION);
         }
 
-        // TODO JWT 토큰 발급
-        return "test";
+        List<String> authorities = memberEntity.getAuthorities()
+                .stream().map(i -> i.getAuthority().name())
+                .collect(Collectors.toList());
+
+        return JwtUtil.generateToken(memberEntity.getId(), memberId, authorities);
     }
 
     public void withdrawMember(String memberId) {

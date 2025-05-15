@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RequiredArgsConstructor
 @RestController
-@RequestMapping("/v1/api/members")
+@RequestMapping("/pub/v1/api/members")
 public class MemberController {
     private final MemberService memberService;
 
@@ -27,18 +27,18 @@ public class MemberController {
 
     @PostMapping("/login")
     public ResponseEntity<CommonDataResponse<MemberLoginResponse>> loginMember(
-            @Valid MemberDto member
+            @Valid @RequestBody MemberDto member
     ) {
         String jwtToken = memberService.login(member.getMemberId(), member.getPassword());
         MemberLoginResponse loginResponse = new MemberLoginResponse(jwtToken);
         return ResponseEntity.ok(new CommonDataResponse<>(loginResponse));
     }
 
-    @DeleteMapping
+    @DeleteMapping("/{memberId}")
     public ResponseEntity<CommonResponse> deleteMember(
-            @Valid MemberDto member
+            @PathVariable String memberId
     ) {
-        memberService.withdrawMember(member.getMemberId());
+        memberService.withdrawMember(memberId);
         return ResponseEntity.ok(CommonResponse.createSuccess());
     }
 }

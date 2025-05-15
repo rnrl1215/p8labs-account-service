@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.Instant;
 
@@ -13,6 +14,7 @@ import java.time.Instant;
 @NoArgsConstructor
 @Entity
 @Table(name = "member_auth")
+@EntityListeners(AuditingEntityListener.class)
 public class MemberAuthEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

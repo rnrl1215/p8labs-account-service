@@ -1,16 +1,21 @@
 package com.p8labs.security.member.utils;
 
-import com.p8labs.security.member.enums.AuthorityType;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.stereotype.Component;
 
 import java.security.Key;
 import java.util.*;
+import java.util.stream.Collectors;
 
-public class JwtUtil {
+@Slf4j
+public class JwtTokenProvider {
     private static final String SECRET = "your-256-bit-secret-your-256-bit-secret";
     private static final long EXPIRATION = 1000 * 60 * 60;
     private static final Key key = Keys.hmacShaKeyFor(SECRET.getBytes());
@@ -19,7 +24,6 @@ public class JwtUtil {
         Map<String, Object> claims = new HashMap<>();
         claims.put("id", id);
         claims.put("roles", roles);
-
         return Jwts.builder()
                 .setClaims(claims)                  // 커스텀 클레임 추가
                 .setSubject(memberId)               // 표준 subject (사용자명 등)
@@ -41,17 +45,18 @@ public class JwtUtil {
         return extractAllClaims(token).get("id", Long.class);
     }
 
-    public static List<String> extractRole(String token) {
+    public static List<GrantedAuthority> extractRole(String token) {
         Claims claims = extractAllClaims(token);
-        Object rolesObject = claims.get("roles");
+        List<String> roles = claims.get("roles", List.class);
 
-        if (rolesObject instanceof List<?>) {
-            return ((List<?>) rolesObject).stream()
-                    .filter(String.class::isInstance)
-                    .map(String.class::cast)
-                    .toList();
+        try {
+            return roles.stream()
+                    .map(SimpleGrantedAuthority::new)
+                    .collect(Collectors.toList());
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            return Collections.emptyList();
         }
-        return Collections.emptyList();
     }
 
     public static String extractMemberId(String token) {

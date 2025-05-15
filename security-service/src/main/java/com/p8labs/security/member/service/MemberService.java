@@ -11,7 +11,7 @@ import com.p8labs.security.member.domain.MemberProfileEntity;
 import com.p8labs.security.member.dto.MemberRegisterDto;
 import com.p8labs.security.member.enums.AuthorityType;
 import com.p8labs.security.member.repository.MemberRepository;
-import com.p8labs.security.member.utils.JwtUtil;
+import com.p8labs.security.member.utils.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -42,7 +42,7 @@ public class MemberService {
                 .stream().map(i -> i.getAuthority().name())
                 .collect(Collectors.toList());
 
-        return JwtUtil.generateToken(memberEntity.getId(), memberId, authorities);
+        return JwtTokenProvider.generateToken(memberEntity.getId(), memberId, authorities);
     }
 
     public void withdrawMember(String memberId) {
@@ -81,6 +81,6 @@ public class MemberService {
         UserPasswordDto passwordInfo = CryptoUtils.getPasswordInfo(foundUserPassword);
         String salt = passwordInfo.getSalt();
         String hashedInputPassword = CryptoUtils.createHashByBCryptWithSalt(inputPassword, salt);
-        return hashedInputPassword.equals(inputPassword);
+        return foundUserPassword.equals(hashedInputPassword);
     }
 }

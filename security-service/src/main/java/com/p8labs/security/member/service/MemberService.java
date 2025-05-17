@@ -2,8 +2,9 @@ package com.p8labs.security.member.service;
 
 
 import com.p8labs.common.dto.UserPasswordDto;
-import com.p8labs.common.enums.CommonException;
+import com.p8labs.common.enums.MemberException;
 import com.p8labs.common.exception.GlobalBusinessException;
+import com.p8labs.security.member.repository.MemberProfileRepository;
 import com.p8labs.security.member.utils.CryptoUtils;
 import com.p8labs.security.member.domain.MemberAuthEntity;
 import com.p8labs.security.member.domain.MemberEntity;
@@ -14,6 +15,7 @@ import com.p8labs.security.member.repository.MemberRepository;
 import com.p8labs.security.member.utils.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -24,8 +26,12 @@ import java.util.stream.Collectors;
 public class MemberService {
 
     private final MemberRepository memberRepository;
+    private final MemberProfileRepository memberProfileRepository;
 
+    @Transactional
     public void registerMember(MemberRegisterDto dto) {
+        checkExistId(dto.getMemberId());
+        checkExistNickname(dto.getNickname());
         MemberEntity member = createRegisterMemberEntity(dto);
         memberRepository.save(member);
     }
@@ -35,7 +41,7 @@ public class MemberService {
         String foundUserPassword = memberEntity.getPassword();
         boolean isEqual = comparePassword(foundUserPassword, inputPassword);
         if (!isEqual) {
-            throw new GlobalBusinessException(CommonException.Member.NOT_EQUAL_PASSWORD_EXCEPTION);
+            throw new GlobalBusinessException(MemberException.Member.NOT_EQUAL_PASSWORD_EXCEPTION);
         }
 
         List<String> authorities = memberEntity.getAuthorities()
@@ -49,7 +55,7 @@ public class MemberService {
         Optional<MemberEntity> foundMember = memberRepository.findByMemberId(memberId);
         foundMember.ifPresentOrElse(
                 memberRepository::delete,
-                () -> { throw new GlobalBusinessException(CommonException.Member.NOT_FOUND_EXCEPTION); }
+                () -> { throw new GlobalBusinessException(MemberException.Member.NOT_FOUND_EXCEPTION); }
         );
     }
 
@@ -74,7 +80,7 @@ public class MemberService {
 
     private MemberEntity findByMemberId(String memberId) {
         Optional<MemberEntity> foundMember = memberRepository.findByMemberId(memberId);
-        return foundMember.orElseThrow(() -> new GlobalBusinessException(CommonException.Member.NOT_FOUND_EXCEPTION));
+        return foundMember.orElseThrow(() -> new GlobalBusinessException(MemberException.Member.NOT_FOUND_EXCEPTION));
     }
 
     public boolean comparePassword(String foundUserPassword, String inputPassword) {
@@ -82,5 +88,20 @@ public class MemberService {
         String salt = passwordInfo.getSalt();
         String hashedInputPassword = CryptoUtils.createHashByBCryptWithSalt(inputPassword, salt);
         return foundUserPassword.equals(hashedInputPassword);
+    }
+
+
+    public void checkExistId(String memberId) {
+        Optional<MemberEntity> foundMember = memberRepository.findByMemberId(memberId);
+        if (foundMember.isPresent()) {
+            throw new GlobalBusinessException(MemberException.Member.DUPLICATION_EXCEPTION);
+        }
+    }
+
+    public void checkExistNickname(String nickname) {
+        MemberProfileEntity oneByNickname = memberProfileRepository.findOneByNickname(nickname);
+        if (oneByNickname != null) {
+            throw new GlobalBusinessException(MemberException.Member.DUPLICATION_EXCEPTION);
+        }
     }
 }

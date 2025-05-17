@@ -10,12 +10,13 @@ import com.p8labs.security.member.service.MemberService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
 @RequiredArgsConstructor
 @RestController
-@RequestMapping("/pub/v1/api/members")
-public class MemberController {
+@RequestMapping("/pub/v1/api/members/")
+public class MemberRegisterController {
     private final MemberService memberService;
 
     @PostMapping("/signup")
@@ -34,11 +35,17 @@ public class MemberController {
         return ResponseEntity.ok(new CommonDataResponse<>(loginResponse));
     }
 
-    @DeleteMapping("/{memberId}")
-    public ResponseEntity<CommonResponse> deleteMember(
-            @PathVariable String memberId
+    @GetMapping("/checkers")
+    public ResponseEntity<CommonResponse> checkDuplication(
+            @RequestParam(required = false) String memberId,
+            @RequestParam(required = false) String nickname
     ) {
-        memberService.withdrawMember(memberId);
+        if (StringUtils.hasText(memberId)) {
+            memberService.checkExistId(memberId);
+        }
+        if (StringUtils.hasText(nickname)) {
+            memberService.checkExistNickname(nickname);
+        }
         return ResponseEntity.ok(CommonResponse.createSuccess());
     }
 }

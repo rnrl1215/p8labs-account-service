@@ -1,5 +1,9 @@
 server:
   port: 18080
+  ssl:
+    key-store-type: PKCS12
+    key-store: classpath:certificate.p12
+    key-password: p8labs
 
 spring:
   application:
@@ -20,4 +24,3 @@ spring:
       hibernate:
         format_sql: true
         dialect: org.hibernate.dialect.MySQL8Dialect
-

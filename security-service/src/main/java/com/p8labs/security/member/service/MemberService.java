@@ -1,11 +1,9 @@
 package com.p8labs.security.member.service;
 
 
-import com.p8labs.common.dto.UserPasswordDto;
 import com.p8labs.common.enums.MemberException;
 import com.p8labs.common.exception.GlobalBusinessException;
 import com.p8labs.security.member.repository.MemberProfileRepository;
-import com.p8labs.security.member.utils.CryptoUtils;
 import com.p8labs.security.member.domain.MemberAuthEntity;
 import com.p8labs.security.member.domain.MemberEntity;
 import com.p8labs.security.member.domain.MemberProfileEntity;
@@ -14,6 +12,7 @@ import com.p8labs.security.member.enums.AuthorityType;
 import com.p8labs.security.member.repository.MemberRepository;
 import com.p8labs.security.member.utils.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,6 +26,7 @@ public class MemberService {
 
     private final MemberRepository memberRepository;
     private final MemberProfileRepository memberProfileRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @Transactional
     public void registerMember(MemberRegisterDto dto) {
@@ -68,8 +68,7 @@ public class MemberService {
         MemberProfileEntity memberProfileEntity = new MemberProfileEntity(nickname, email);
         MemberAuthEntity memberAuthEntity = new MemberAuthEntity(AuthorityType.ROLE_USER);
 
-        String encryptedPassword = CryptoUtils.createHashByBCrypt(password);
-
+        String encryptedPassword = passwordEncoder.encode(password);
         MemberEntity member = MemberEntity.createRegisterEntity(memberId,
                 encryptedPassword,
                 memberProfileEntity,
@@ -84,10 +83,7 @@ public class MemberService {
     }
 
     public boolean comparePassword(String foundUserPassword, String inputPassword) {
-        UserPasswordDto passwordInfo = CryptoUtils.getPasswordInfo(foundUserPassword);
-        String salt = passwordInfo.getSalt();
-        String hashedInputPassword = CryptoUtils.createHashByBCryptWithSalt(inputPassword, salt);
-        return foundUserPassword.equals(hashedInputPassword);
+        return passwordEncoder.matches(inputPassword, foundUserPassword);
     }
 
 

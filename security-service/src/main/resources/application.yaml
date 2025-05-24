@@ -1,9 +1,5 @@
 server:
   port: 18080
-  ssl:
-    key-store-type: PKCS12
-    key-store: classpath:certificate.p12
-    key-password: p8labs
 
 spring:
   application:
